@@ -347,6 +347,8 @@ bool getLine(){
 				fprintf(out, "CALL _%s\n%%endmacro\nJMP _%s_out\n_%s:\n", 
 					func, func, func);
 				openHash(HASH_FUNCTION);
+			CASE("void")
+				fprintf(out, "POP dword[_temp]\n");
 			DEFAULT()
 				//printf("#");
 				ERROR();

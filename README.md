@@ -1,6 +1,6 @@
 j-nasm
 =========
-A stupid compiler to NASM. <br>
+A stupid preprocessor to NASM. <br>
 It will help you with the crazy control flow of Assembly x86.<br>
 
 ## Usage

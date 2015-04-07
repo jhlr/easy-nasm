@@ -14,10 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include <stdio.h>
-#include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
+#include <ctype.h>
 
 #define OPEN_LEN (30)
 #define AUX_LEN (30)
@@ -52,7 +51,7 @@ int lineNumber 	= 0,
 	stackLOOP[AUX_LEN],
 	funcPushCount;
 
-char line[LINE_LEN], temp[20], func[50];
+char line[LINE_LEN], temp[20], func[50], tabs[20];
 char v1[50], v2[50], op[10];
 
 FILE* in = NULL;
@@ -79,11 +78,11 @@ void closeHash(){
 		case HASH_IF:
 		case HASH_ELSEIF:
 			c = countIFs();
-			fprintf(out, "_if_%d_%d:\n", 
-				curIF, ++subcountIF[c-1]);
+			fprintf(out, "%s_if_%d_%d:\n", 
+				tabs, curIF, ++subcountIF[c-1]);
 		case HASH_ELSE:
-			fprintf(out, "_if_%d_out:\n", 
-				curIF);
+			fprintf(out, "%s_if_%d_out:\n", 
+				tabs, curIF);
 			popIF();
 			while(i && open[i] > 1 && open[i] >= open[i-1]){
 				open[i] = 0;
@@ -94,20 +93,20 @@ void closeHash(){
 		case HASH_DOWHILE:
 		case HASH_WHILE:
 			open[i] = 0;
-			fprintf(out, "JMP _loop_%d\n_loop_%d_out:\n",
-				curLOOP, curLOOP);
+			fprintf(out, "%sJMP _loop_%d\n%s_loop_%d_out:\n",
+				tabs, curLOOP, tabs, curLOOP);
 			popLOOP();
 			break;
 		case HASH_LOOP:
 			open[i] = 0;
-			fprintf(out, "LOOP _loop_%d\n_loop_%d_out:\n", 
-				curLOOP, curLOOP);
+			fprintf(out, "%sLOOP _loop_%d\n%s_loop_%d_out:\n", 
+				tabs, curLOOP, tabs, curLOOP);
 			popLOOP();
 			break;
 		case HASH_FUNCTION:
 			open[i] = 0;
-			fprintf(out, "_%s_end:\nLEAVE\nRET\n_%s_out:\n", 
-				func, func);
+			fprintf(out, "%s_%s_end:\n%sLEAVE\n%sRET\n%s_%s_out:\n", 
+				tabs, func, tabs, tabs, tabs, func);
 			sprintf(func, "0");
 			break;
 		case HASH_NONE:
@@ -127,11 +126,18 @@ void openHash(int h){
 }
 void trim(char* str){
 	int i, len = strlen(str);
-	for(i=len-1; i>=0; i--){
-		if(str[i]==' '){
-			str[i] = '\0';
+	for(i=len-1; isspace(str[i]); i--){
+		str[i] = '\0';
+	}
+}
+void getTabs(){
+	int i, len=strlen(line);
+	for(i=0; i<len; i++){
+		if(!isspace(line[i])){
+			tabs[i] = '\0';
+			break;
 		} else {
-			return;
+			tabs[i] = line[i];
 		}
 	}
 }
@@ -166,7 +172,8 @@ bool printCond(){
 			ERROR();
 	ENDSWITCH()
 
-	fprintf(out, "CMP %s, %s\nJ%s ", v1, v2, op);
+	fprintf(out, "%sCMP %s, %s\n%sJ%s ", 
+		tabs, v1, v2, tabs, op);
 	return true;
 }
 int countIFs(){
@@ -232,20 +239,22 @@ void pushLOOP(){
 }
 bool getLine(){
 	int i, c;
-	if(fscanf(in, " %[^\n]", line) == EOF){
+	if(fgets(line, 1000, in) == NULL){
 		return false;
 	}
+	trim(line);
+	getTabs();
+	sscanf(line, " %s", temp);
 	lineNumber++;
-	if(line[0] == '#'){
-		sscanf(&line[1], " %[^\n]", &line[1]);
-		sscanf(line, "#%[^ \n\t]", temp);
+	if(temp[0] == '#'){
+		sscanf(line, " #%[^ ]", temp);
 		SWITCH(temp)
 			CASE("end")
 				closeHash();
 			CASE("if")
 				pushIF();
-				fprintf(out, "_if_%d_%d:\n", 
-					curIF, 1);
+				fprintf(out, "%s_if_%d_%d:\n", 
+					tabs, curIF, 1);
 				if(printCond()){
 					fprintf(out, "_if_%d_%d\n", 
 						curIF, 2);
@@ -257,8 +266,8 @@ bool getLine(){
 				}
 				c = countIFs() - 1;
 				subcountIF[c]++;
-				fprintf(out, "JMP _if_%d_out\n_if_%d_%d:\n", 
-					curIF, curIF, subcountIF[c]);
+				fprintf(out, "%sJMP _if_%d_out\n%s_if_%d_%d:\n", 
+					tabs, curIF, tabs, curIF, subcountIF[c]);
 				if(printCond()){
 					fprintf(out, "_if_%d_%d\n", 
 						curIF, subcountIF[c]+1);
@@ -270,24 +279,24 @@ bool getLine(){
 				}
 				c = countIFs() - 1;
 				subcountIF[c]++;
-				fprintf(out, "JMP _if_%d_out\n_if_%d_%d:\n", 
-					curIF, curIF, subcountIF[c]);
+				fprintf(out, "%sJMP _if_%d_out\n%s_if_%d_%d:\n", 
+					tabs, curIF, tabs, curIF, subcountIF[c]);
 				openHash(HASH_ELSE);
 			CASE("dowhile")
 				pushLOOP();
-				fprintf(out, "JMP _loop_%d_in\n_loop_%d:\n", 
-					curLOOP, curLOOP);
+				fprintf(out, "%sJMP _loop_%d_in\n%s_loop_%d:\n", 
+					tabs, curLOOP, tabs, curLOOP);
 				if(printCond()){
 					fprintf(out, "_loop_%d_out\n", 
 						curLOOP);	
 				}
-				fprintf(out, "_loop_%d_in:\n", 
-					curLOOP);
+				fprintf(out, "%s_loop_%d_in:\n", 
+					tabs, curLOOP);
 				openHash(HASH_DOWHILE);
 			CASE("while")
 				pushLOOP();
-				fprintf(out, "_loop_%d:\n", 
-					curLOOP);
+				fprintf(out, "%s_loop_%d:\n", 
+					tabs, curLOOP);
 				if(printCond()){
 					fprintf(out, "_loop_%d_out\n", 
 						curLOOP);
@@ -296,20 +305,20 @@ bool getLine(){
 			CASE("loop")
 				pushLOOP();
 				sscanf(line, " #%*[^ \t\n] %[^\n] ", temp);
-				fprintf(out, "MOV ecx, %s\n_loop_%d:\n", 
-					temp, curLOOP);
+				fprintf(out, "%sMOV ecx, %s\n%s_loop_%d:\n", 
+					tabs, temp, tabs, curLOOP);
 				openHash(HASH_LOOP);
 			CASE("break")
 				if(curLOOP){
-					fprintf(out, "JMP _loop_%d_out\n", 
-						curLOOP);
+					fprintf(out, "%sJMP _loop_%d_out\n", 
+						tabs, curLOOP);
 				} else {
 					ERROR();
 				}
 			CASE("continue")
 				if(curLOOP){
-					fprintf(out, "JMP _loop_%d\n", 
-						curLOOP);
+					fprintf(out, "%sJMP _loop_%d\n", 
+						tabs, curLOOP);
 				} else {
 					ERROR();
 				}
@@ -319,12 +328,13 @@ bool getLine(){
 				SWITCH(temp)
 					CASE("\\")
 					DEFAULT()
-						fprintf(out, "MOV [_temp], %s\n", temp);
+						fprintf(out, "%sMOV [_temp], %s\n", 
+							tabs, temp);
 				ENDSWITCH()
 				SWITCH(func)
 					CASE("0")ERROR()
 				ENDSWITCH()
-				fprintf(out, "JMP _%s_end\n", func);
+				fprintf(out, "%sJMP _%s_end\n", tabs, func);
 			CASE("function")
 				int n, i;
 				funcPushCount = 0;
@@ -337,15 +347,15 @@ bool getLine(){
 				for(i=1; i<=n; i++){
 					sscanf(line, " %[^,], %[^\n] ", 
 						temp, line);
-					fprintf(out, "MOV %s, %%%d\n", temp, i);
+					fprintf(out, "%sMOV %s, %%%d\n", tabs, temp, i);
 				}
-				fprintf(out, "CALL _%s\nPOPA\n%%endmacro\nJMP _%s_out\n_%s:\nENTER 0, 0\n", 
-					func, func, func);
+				fprintf(out, "%sCALL _%s\n%sPOPA\n%%endmacro\nJMP _%s_out\n_%s:\n%sENTER 0, 0\n", 
+					tabs, func, tabs, func, func, tabs);
 				openHash(HASH_FUNCTION);
 			CASE(">")
 				sscanf(line, " #%*s %[^\n] ", temp);
 				trim(temp);
-				fprintf(out, "MOV %s, [_temp]\n", temp);
+				fprintf(out, "%sMOV %s, [_temp]\n", tabs, temp);
 			DEFAULT()
 				//printf("#");
 				ERROR();

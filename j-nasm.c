@@ -305,7 +305,7 @@ bool getLine(){
 			CASE("loop")
 				pushLOOP();
 				sscanf(line, " #%*[^ \t\n] %[^\n] ", temp);
-				fprintf(out, "%sMOV ecx, %s\n%s_loop_%d:\n", 
+				fprintf(out, "%sMOV cx, %s\n%s_loop_%d:\n", 
 					tabs, temp, tabs, curLOOP);
 				openHash(HASH_LOOP);
 			CASE("break")

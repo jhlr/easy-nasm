@@ -105,7 +105,7 @@ void closeHash(){
 			break;
 		case HASH_FUNCTION:
 			open[i] = 0;
-			fprintf(out, "_%s_end:\nPOPA\nPUSH dword 0\nRET\n_%s_out:\n", 
+			fprintf(out, "_%s_end:\nRET\n_%s_out:\n", 
 				func, func);
 			sprintf(func, "0");
 			break;
@@ -317,14 +317,13 @@ bool getLine(){
 				sscanf(line, " #%*[^ \n\t] %[^\n] ", temp);
 				SWITCH(temp)
 					CASE("\\")
-						fprintf(out, "JMP _%s_end\n", 
-							func);
-						return true;
+					DEFAULT()
+						fprintf(out, "MOV [_temp], %s\n", temp);
 				ENDSWITCH()
 				SWITCH(func)
 					CASE("0")ERROR()
 				ENDSWITCH()
-				fprintf(out, "MOV [_temp], %s\nPOPA\nPUSH dword[_temp]\nRET\n", temp);
+				fprintf(out, "JMP _%s_end\n", func);
 			CASE("function")
 				int n, i;
 				sscanf(line, " #%*[^ \n\t] %[^\n] ", 
@@ -344,11 +343,13 @@ bool getLine(){
 					}
 					fprintf(out, "%%%d\n", i);
 				}
-				fprintf(out, "CALL _%s\n%%endmacro\nJMP _%s_out\n_%s:\n", 
+				fprintf(out, "CALL _%s\nPOPA\n%%endmacro\nJMP _%s_out\n_%s:\n", 
 					func, func, func);
 				openHash(HASH_FUNCTION);
-			CASE("void")
-				fprintf(out, "POP dword[_temp]\n");
+			CASE(">")
+				sscanf(line, " #%*s %[^\n]", temp);
+				trim(temp);
+				fprintf(out, "MOV %s, [_temp]\n", temp);
 			DEFAULT()
 				//printf("#");
 				ERROR();

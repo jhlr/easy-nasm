@@ -66,21 +66,20 @@ Does not support nested loops <br>
 Receives only one parameter, which will be moved to the `cx` register <br>
 and will be decremented at every iteration until it hits `0`
 ```
-; to put a literal, it is needed to specify the size to dword
-#loop dword 50
+#loop 50
 ; nasm code
 #end
 ; for registers it is very simple
 #loop eax
 #end
 ```
-If you really want to use the `ecx` and still have your loop
+If you really want to use `cx` and to still have your loop
 ```
 ; just push and pop it
 #loop dword 5
-push ecx
+push cx
 ; nasm code
-pop ecx
+pop cx
 #end
 ```
 ### `#break`, `#continue`

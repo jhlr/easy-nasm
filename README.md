@@ -115,13 +115,12 @@ Cannot nest `#function` and it has to be declared before its use,
 so it's highly advised to declare it at the beginning of the code
 ```
 ; after the name of it, you tell the number of arguments
-#function foo 2: eax, stack
-  pop ebx
+#function foo 2: eax, ebx
   add eax, ebx
   #return eax
 #end
 ; later...
-foo 32, dword 2
+foo 32, 2
 #> eax ; eax = 34
 ```
 You are perfectly able to make recursion, ~~you just don't have the best stack~~

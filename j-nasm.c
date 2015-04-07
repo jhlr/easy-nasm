@@ -49,9 +49,10 @@ int lineNumber 	= 0,
 	subcountIF[AUX_LEN],
 	curLOOP 	= 0,
 	countLOOP 	= 0,
-	stackLOOP[AUX_LEN];
+	stackLOOP[AUX_LEN],
+	funcPushCount;
 
-char line[LINE_LEN], temp[20], func[50], line2[LINE_LEN];
+char line[LINE_LEN], temp[20], func[50];
 char v1[50], v2[50], op[10];
 
 FILE* in = NULL;
@@ -105,7 +106,7 @@ void closeHash(){
 			break;
 		case HASH_FUNCTION:
 			open[i] = 0;
-			fprintf(out, "_%s_end:\nRET\n_%s_out:\n", 
+			fprintf(out, "_%s_end:\nLEAVE\nRET\n_%s_out:\n", 
 				func, func);
 			sprintf(func, "0");
 			break;
@@ -326,28 +327,23 @@ bool getLine(){
 				fprintf(out, "JMP _%s_end\n", func);
 			CASE("function")
 				int n, i;
+				funcPushCount = 0;
 				sscanf(line, " #%*[^ \n\t] %[^\n] ", 
 					line);
 				sscanf(line, " %[^ ] %d: %[^\n] ", 
-					func, &n, line2);
-				sscanf(line2, " %[^\n] ", line);
+					func, &n, line);
 				fprintf(out, "%%macro %s %d\nPUSHA\n", 
 					func, n);
 				for(i=1; i<=n; i++){
 					sscanf(line, " %[^,], %[^\n] ", 
 						temp, line);
-					if(!strcmp(temp, "stack")){
-						fprintf(out, "PUSH ");
-					} else {
-						fprintf(out, "MOV %s, ", temp);
-					}
-					fprintf(out, "%%%d\n", i);
+					fprintf(out, "MOV %s, %%%d\n", temp, i);
 				}
-				fprintf(out, "CALL _%s\nPOPA\n%%endmacro\nJMP _%s_out\n_%s:\n", 
+				fprintf(out, "CALL _%s\nPOPA\n%%endmacro\nJMP _%s_out\n_%s:\nENTER 0, 0\n", 
 					func, func, func);
 				openHash(HASH_FUNCTION);
 			CASE(">")
-				sscanf(line, " #%*s %[^\n]", temp);
+				sscanf(line, " #%*s %[^\n] ", temp);
 				trim(temp);
 				fprintf(out, "MOV %s, [_temp]\n", temp);
 			DEFAULT()

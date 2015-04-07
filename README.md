@@ -63,8 +63,8 @@ Up to 30 nested loops: _( enough to almost anything )_
 ```
 ### `#loop`
 Does not support nested loops <br>
-Receives only one parameter, which will be moved to `ecx` <br>
-and is decremented at every iteration until it hits `0`
+Receives only one parameter, which will be moved to the `cx` register <br>
+and will be decremented at every iteration until it hits `0`
 ```
 ; to put a literal, it is needed to specify the size to dword
 #loop dword 50

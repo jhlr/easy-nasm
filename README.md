@@ -7,8 +7,9 @@ It will help you with the crazy control flow of Assembly x86.<br>
 ### How to
 1. Download the source of j-nasm.
 2. Compile it with GCC: `$ gcc j-nasm.c -o j-nasm`
-3. To run, you should give a file as argument: `./j-nasm path/to/file`
-4. Be sure your source has `_temp: dq 0` declared
+3. Be sure your source has `_temp: dq 0` declared
+4. To preprocess, you should give a file as argument: `$ ./j-nasm path/to/file`
+5. Then use your NASM compiler
 
 ### Conditions
 They should appear with a `#if`, `#elseif`, `#while` or `#dowhile`<br>

@@ -133,7 +133,7 @@ You are perfectly able to make recursion, ~~you just don't have the best stack~~
   #end
   dec eax
   fatorial eax
-  pop ebx
+  #> ebx
   inc eax
   imul eax, ebx
   #return eax

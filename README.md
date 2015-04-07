@@ -39,7 +39,7 @@ Supports literals, regiters and memory adresses:
 * `#function`
 * `#if`
 * `#loop`
-* `#void`
+* `#>`
 * `#return`
 * `#while`
 
@@ -110,10 +110,9 @@ but it is needed at least an `#if` to use the others
   #end
 #end
 ```
-### `#function`, `#return`, `#void`
+### `#function`, `#return`, `#>`
 Cannot nest `#function` and it has to be declared before its use,
-so it's highly advised to declare it at the beginning of the code<br>
-If your dear function does not return anything, you have to use the `#void` after you call the function
+so it's highly advised to declare it at the beginning of the code
 ```
 ; after the name of it, you tell the number of arguments
 #function foo 2: eax, stack
@@ -123,7 +122,7 @@ If your dear function does not return anything, you have to use the `#void` afte
 #end
 ; later...
 foo 32, dword 2
-pop eax ; eax = 34
+#> eax ; eax = 34
 ```
 You are perfectly able to make recursion, ~~you just don't have the best stack~~
 ```
